@@ -1,0 +1,1 @@
+../../node_modules/chartkick/chartkick.js

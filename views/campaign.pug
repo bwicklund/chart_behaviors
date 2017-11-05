@@ -1,0 +1,16 @@
+doctype html
+html(lang='en')
+
+ head
+   title Campaign Behaviors
+   script(src='https://www.gstatic.com/charts/loader.js')
+   script(src='/js/chartkick.js')
+ body
+  h2 #{orgName} : #{campaignName}
+  - index = 0
+  each val, key in data
+   h3 #{key}
+   - var id = index++
+   div(id="chart-" + id)
+   script.
+    new Chartkick.Timeline("chart-#{id}", !{JSON.stringify(val)})
