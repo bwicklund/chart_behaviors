@@ -5,6 +5,12 @@ html(lang='en')
    title Campaign Behaviors
    script(src='https://www.gstatic.com/charts/loader.js')
    script(src='/js/chartkick.js')
+   script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js')
+
+   css.
+    body#div {
+      max-height:100%;
+    }
  body
   h2 #{orgName} : #{campaignName}
   - index = 0
@@ -13,4 +19,5 @@ html(lang='en')
    - var id = index++
    div(id="chart-" + id)
    script.
-    new Chartkick.Timeline("chart-#{id}", !{JSON.stringify(val)})
+    new Chartkick.Timeline("chart-#{id}", !{JSON.stringify(val)}, {"library": {"height": 300}});
+    $('#chart-' + #{id} + ' text:contains("Redemption End Date")').css('font-size','11px').attr('fill','#A6373C').prev().first().attr('height',23*41+'px').attr('width','1px').attr('y','0');

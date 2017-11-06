@@ -1,33 +1,29 @@
-/*jshint esversion: 6 */
 const express = require('express');
 const assert = require('assert');
 const app = express();
 const path = require('path');
 const moment = require('moment');
-const {
-    Pool,
-    Client
-} = require('pg');
+const Pool = require('pg').Pool;
 const pool = new Pool({
-    user: 'bwicklund',
+    user: 'bryon.wicklund',
     host: 'localhost',
     database: 'hermes_development',
     port: 5432,
 });
-app.use(express.static('public'));
-app.set("view engine", "pug");
-app.set("views", path.join(__dirname, "views"));
+
+app.use(express.static('public'))
+app.set("view engine", "pug")
+app.set("views", path.join(__dirname, "views"))
 
 app.get('/campaign/:campaignId', (req, res, next) => {
-    // Get campaign name
+    // Get Organization and Campaign name
     var orgName = '';
     var campaignName = '';
     var data = {};
     var sql = "SELECT o.name AS org_name, c.name AS camp_name \
-    FROM organizations o \
-    RIGHT JOIN campaigns c ON o.id = c.organization_id \
-    WHERE c.id = $1";
-
+               FROM organizations o \
+               RIGHT JOIN campaigns c ON o.id = c.organization_id \
+               WHERE c.id = $1";
     pool.query(sql, [req.params.campaignId])
         .then(function(results) {
             if(results.rows.length == 0) {
@@ -36,11 +32,13 @@ app.get('/campaign/:campaignId', (req, res, next) => {
             }
             orgName = results.rows[0]['org_name'];
             campaignName = results.rows[0]['camp_name'];
-                // Get Campaign Behaviors
+
+            // Get Campaign Behaviors
             sql = "SELECT * \
-            FROM campaign_behaviors cb \
-            RIGHT JOIN behaviors b ON b.id = cb.behavior_id \
-            WHERE campaign_id = $1";
+                   FROM campaign_behaviors cb \
+                   RIGHT JOIN behaviors b ON b.id = cb.behavior_id \
+                   WHERE campaign_id = $1";
+
             pool.query(sql, [req.params.campaignId])
                 .then(function(results) {
                     for (i = 0; i < results.rows.length - 1; i++) {
@@ -48,6 +46,15 @@ app.get('/campaign/:campaignId', (req, res, next) => {
                         if (row) {
                             behaviorUkey = "Ukey: " + row['ukey'];
                             data[behaviorUkey] = [];
+
+                            //Redemption Ends On
+                            if (results.rows[i]['redemption_ends_on']) {
+                                var label = 'Redemption Ends On';
+                                var so = moment(row['redemption_ends_on']).format('YYYY-MM-DD');
+                                var eo = moment(row['redemption_ends_on']).format('YYYY-MM-DD');
+                                data[behaviorUkey].push([label, so, eo]);
+                            }
+
 
                             //Window
                             if (results.rows[i]['window_starts_on']) {
@@ -72,6 +79,15 @@ app.get('/campaign/:campaignId', (req, res, next) => {
                                 eo = moment(row['visible_web_end_on']).format('YYYY-MM-DD');
                                 data[behaviorUkey].push([label, so, eo]);
                             }
+
+                            //Agent
+                            if (results.rows[i]['visible_agent_start_on'] && results.rows[i]['visible_agent_end_on']) {
+                                var label = 'Agent';
+                                var so = moment(row['visible_agent_start_on']).format('YYYY-MM-DD');
+                                var eo = moment(row['visible_agent_end_on']).format('YYYY-MM-DD');
+                                data[behaviorUkey].push([label, so, eo]);
+                            }
+
                         }
                     }
                     res.render('campaign', {
